@@ -17,3 +17,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.get("/test", tags=["test"])
+async def get_root() -> dict:
+    time.sleep(2)
+    return {"Message": "Hello World!"}
+
+
