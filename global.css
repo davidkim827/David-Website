@@ -1,0 +1,15 @@
+body {
+	color: #333;
+	font-family: "Rubik", sans-serif;
+	display: block;
+	position: relative;
+	margin-bottom: 10em;
+	margin-top: 5em;
+	margin-right: auto;
+	margin-left: auto;
+
+}
+
+div.right{
+	text-align: right;
+}
