@@ -1,9 +1,9 @@
 ﻿# Svelte-FastAPI
 
-## **Backend**
+<!-- ## **Backend**
 - To Install Requirements: `pip install -r requirements.txt`
 - To test routes: `pytest`
-- To run backend in dev: `python ./backend/main.py`
+- To run backend in dev: `python ./backend/main.py` -->
 
 
 ## **Frontend**
