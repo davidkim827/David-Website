@@ -2345,7 +2345,7 @@ var app = (function () {
     		},
     		{
     			project: {
-    				name: "File Analytics",
+    				name: "Supervised File Content Learning",
     				date: "May 2019",
     				site: "https://github.com/davidkim827/BigData/tree/master/Project%203"
     			},
