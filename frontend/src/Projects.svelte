@@ -25,7 +25,7 @@
 
         },
         {
-            project: { name: "File Analytics", date: "May 2019", site: "https://github.com/davidkim827/BigData/tree/master/Project%203"},
+            project: { name: "Supervised File Content Learning", date: "May 2019", site: "https://github.com/davidkim827/BigData/tree/master/Project%203"},
             description: [
                 "Created script converting PDF and DOCX files into text data and placed into CSV for analytics",
                 "Utilized Supervised Machine Learning to analyze text and train model to predict category based on text"
