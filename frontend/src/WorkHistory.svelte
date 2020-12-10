@@ -100,11 +100,11 @@
                         on:click={() => openSite(work.company.site)}>
                         {work.company.name}
                     </div>
-                    <div class="right">{work.dates}</div>
+                    <div class="right">{work.location}</div>
                 </div>
                 <div class="career-box-2">
                     <div class="left">{work.position}</div>
-                    <div class="right">{work.location}</div>
+                    <div class="right">{work.dates}</div>
                 </div>
             </div>
             {#if visible}

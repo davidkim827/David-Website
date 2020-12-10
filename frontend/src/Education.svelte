@@ -39,7 +39,7 @@
             location: "Brooklyn, NY",
             degree: "M.S. Computer Science",
             gpa: 3.14,
-            dates: "Sep 2018 - May 2020",
+            dates: "Sep 2011 - May 2015",
             relevantCourses: [
                 "Concepts in Computer Science",
                 "Computational Problem Solving",
