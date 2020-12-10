@@ -1332,7 +1332,7 @@ var app = (function () {
     	let t0;
     	let t1;
     	let div1;
-    	let t2_value = /*work*/ ctx[5].dates + "";
+    	let t2_value = /*work*/ ctx[5].location + "";
     	let t2;
     	let t3;
     	let div5;
@@ -1341,7 +1341,7 @@ var app = (function () {
     	let t4;
     	let t5;
     	let div4;
-    	let t6_value = /*work*/ ctx[5].location + "";
+    	let t6_value = /*work*/ ctx[5].dates + "";
     	let t6;
     	let t7;
     	let t8;
@@ -1981,7 +1981,7 @@ var app = (function () {
     			location: "Brooklyn, NY",
     			degree: "M.S. Computer Science",
     			gpa: 3.14,
-    			dates: "Sep 2018 - May 2020",
+    			dates: "Sep 2011 - May 2015",
     			relevantCourses: ["Concepts in Computer Science", "Computational Problem Solving"]
     		}
     	];
