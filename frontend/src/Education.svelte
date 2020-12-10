@@ -36,8 +36,8 @@
                 name: "College of William and Mary",
                 site: "https://www.wm.edu/",
             },
-            location: "Brooklyn, NY",
-            degree: "M.S. Computer Science",
+            location: "Williamsburg, VA",
+            degree: "B.S. Neuroscience",
             gpa: 3.14,
             dates: "Sep 2011 - May 2015",
             relevantCourses: [
