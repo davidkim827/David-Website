@@ -1978,7 +1978,7 @@ var app = (function () {
     				name: "College of William and Mary",
     				site: "https://www.wm.edu/"
     			},
-    			location: "Brooklyn, NY",
+    			location: "Williamsburg, VA",
     			degree: "M.S. Computer Science",
     			gpa: 3.14,
     			dates: "Sep 2011 - May 2015",
