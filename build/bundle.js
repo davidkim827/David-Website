@@ -1979,7 +1979,7 @@ var app = (function () {
     				site: "https://www.wm.edu/"
     			},
     			location: "Williamsburg, VA",
-    			degree: "M.S. Computer Science",
+    			degree: "B.S. Neuroscience",
     			gpa: 3.14,
     			dates: "Sep 2011 - May 2015",
     			relevantCourses: ["Concepts in Computer Science", "Computational Problem Solving"]
