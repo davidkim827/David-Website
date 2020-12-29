@@ -33,6 +33,22 @@
         },
         {
             school: {
+                name: "Northern Virginia Community College",
+                site: "https://www.nvcc.edu/",
+            },
+            location: "Manassas, VA",
+            degree: "Continuing Education",
+            gpa: 4.00,
+            dates: "May 2017 - May 2018",
+            relevantCourses: [
+                "Linear Algebra",
+                "Computer Organization",
+                "Discrete Mathematics",
+                "Data Structures",
+            ],
+        },
+        {
+            school: {
                 name: "College of William and Mary",
                 site: "https://www.wm.edu/",
             },

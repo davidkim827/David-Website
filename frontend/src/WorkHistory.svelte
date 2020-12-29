@@ -34,6 +34,20 @@
                 "Configured software on Windows/RHEL based servers for the purposes of network security, automation, and CI/CD for the DevSecOps team",
             ],
         },
+        {
+            company: {
+                name: "Command Group",
+                site: "https://www.commandcg.com/",
+            },
+            location: "Washington, DC",
+            position: "Sec Advisory and Mgmt Services",
+            dates: "Sept 2016 – May 2017",
+            descriptions: [
+                "Created reports on OSINT regarding security concerns to clients",
+                "Researched business development opportunities in the Middle East",
+                "Created daily briefs for company executives on latest trends and topics in National and Homeland security matters"
+            ],
+        },
     ];
 </script>
 
