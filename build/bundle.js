@@ -1218,7 +1218,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (110:12) {#if visible}
+    // (125:12) {#if visible}
     function create_if_block$2(ctx) {
     	let div;
     	let ul;
@@ -1300,7 +1300,7 @@ var app = (function () {
     	};
     }
 
-    // (115:24) {#each work.descriptions as description}
+    // (130:24) {#each work.descriptions as description}
     function create_each_block_1(ctx) {
     	let li;
     	let t_value = /*description*/ ctx[8] + "";
@@ -1322,12 +1322,13 @@ var app = (function () {
     	};
     }
 
-    // (93:4) {#each workItems as work}
+    // (107:4) {#each workItems as work}
     function create_each_block$1(ctx) {
     	let div7;
     	let div6;
     	let div2;
     	let div0;
+    	let a;
     	let t0_value = /*work*/ ctx[5].company.name + "";
     	let t0;
     	let t1;
@@ -1361,6 +1362,7 @@ var app = (function () {
     			div6 = element("div");
     			div2 = element("div");
     			div0 = element("div");
+    			a = element("a");
     			t0 = text(t0_value);
     			t1 = space();
     			div1 = element("div");
@@ -1375,6 +1377,7 @@ var app = (function () {
     			t7 = space();
     			if (if_block) if_block.c();
     			t8 = space();
+    			attr(a, "href", "javascript:void(0)");
     			attr(div0, "id", "company-link");
     			attr(div0, "class", "left svelte-jxbms0");
     			attr(div1, "class", "right svelte-jxbms0");
@@ -1390,7 +1393,8 @@ var app = (function () {
     			append(div7, div6);
     			append(div6, div2);
     			append(div2, div0);
-    			append(div0, t0);
+    			append(div0, a);
+    			append(a, t0);
     			append(div2, t1);
     			append(div2, div1);
     			append(div1, t2);
@@ -1408,7 +1412,7 @@ var app = (function () {
 
     			if (!mounted) {
     				dispose = [
-    					listen(div0, "click", click_handler),
+    					listen(a, "click", click_handler),
     					listen(div6, "click", /*click_handler_1*/ ctx[4])
     				];
 
@@ -1580,6 +1584,20 @@ var app = (function () {
     				"Created Software Management and Deployment Proof-of-Concept for IT Dept through setting up Nexus Server and Chocolatey endpoints to interface and auto-install software on to Windows terminals",
     				"Configured software on Windows/RHEL based servers for the purposes of network security, automation, and CI/CD for the DevSecOps team"
     			]
+    		},
+    		{
+    			company: {
+    				name: "Command Group",
+    				site: "https://www.commandcg.com/"
+    			},
+    			location: "Washington, DC",
+    			position: "Sec Advisory and Mgmt Services",
+    			dates: "Sept 2016 – May 2017",
+    			descriptions: [
+    				"Created reports on OSINT regarding security concerns to clients",
+    				"Researched business development opportunities in the Middle East",
+    				"Created daily briefs for company executives on latest trends and topics in National and Homeland security matters"
+    			]
     		}
     	];
 
@@ -1609,7 +1627,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (120:12) {#if visible}
+    // (135:12) {#if visible}
     function create_if_block$3(ctx) {
     	let div;
     	let ul;
@@ -1691,7 +1709,7 @@ var app = (function () {
     	};
     }
 
-    // (125:24) {#each edu.relevantCourses as course}
+    // (140:24) {#each edu.relevantCourses as course}
     function create_each_block_1$1(ctx) {
     	let li;
     	let t_value = /*course*/ ctx[8] + "";
@@ -1713,12 +1731,13 @@ var app = (function () {
     	};
     }
 
-    // (103:4) {#each educationItems as edu}
+    // (119:4) {#each educationItems as edu}
     function create_each_block$2(ctx) {
     	let div7;
     	let div6;
     	let div2;
     	let div0;
+    	let a;
     	let t0_value = /*edu*/ ctx[5].school.name + "";
     	let t0;
     	let t1;
@@ -1755,6 +1774,7 @@ var app = (function () {
     			div6 = element("div");
     			div2 = element("div");
     			div0 = element("div");
+    			a = element("a");
     			t0 = text(t0_value);
     			t1 = space();
     			div1 = element("div");
@@ -1771,6 +1791,7 @@ var app = (function () {
     			t9 = space();
     			if (if_block) if_block.c();
     			t10 = space();
+    			attr(a, "href", "javascript:void(0)");
     			attr(div0, "id", "school-link");
     			attr(div0, "class", "left svelte-gz7h7b");
     			attr(div1, "class", "right svelte-gz7h7b");
@@ -1786,7 +1807,8 @@ var app = (function () {
     			append(div7, div6);
     			append(div6, div2);
     			append(div2, div0);
-    			append(div0, t0);
+    			append(div0, a);
+    			append(a, t0);
     			append(div2, t1);
     			append(div2, div1);
     			append(div1, t2);
@@ -1806,7 +1828,7 @@ var app = (function () {
 
     			if (!mounted) {
     				dispose = [
-    					listen(div0, "click", click_handler),
+    					listen(a, "click", click_handler),
     					listen(div6, "click", /*click_handler_1*/ ctx[4])
     				];
 
@@ -1975,6 +1997,22 @@ var app = (function () {
     		},
     		{
     			school: {
+    				name: "Northern Virginia Community College",
+    				site: "https://www.nvcc.edu/"
+    			},
+    			location: "Manassas, VA",
+    			degree: "Continuing Education",
+    			gpa: 4,
+    			dates: "May 2017 - May 2018",
+    			relevantCourses: [
+    				"Linear Algebra",
+    				"Computer Organization",
+    				"Discrete Mathematics",
+    				"Data Structures"
+    			]
+    		},
+    		{
+    			school: {
     				name: "College of William and Mary",
     				site: "https://www.wm.edu/"
     			},
@@ -2012,7 +2050,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (104:8) {#if visible}
+    // (103:8) {#if visible}
     function create_if_block$4(ctx) {
     	let div;
     	let ul;
@@ -2094,7 +2132,7 @@ var app = (function () {
     	};
     }
 
-    // (109:20) {#each proj.description as desc}
+    // (108:20) {#each proj.description as desc}
     function create_each_block_1$2(ctx) {
     	let li;
     	let t_value = /*desc*/ ctx[8] + "";
@@ -2122,6 +2160,7 @@ var app = (function () {
     	let div3;
     	let div2;
     	let div0;
+    	let a;
     	let t0_value = /*proj*/ ctx[5].project.name + "";
     	let t0;
     	let t1;
@@ -2146,6 +2185,7 @@ var app = (function () {
     			div3 = element("div");
     			div2 = element("div");
     			div0 = element("div");
+    			a = element("a");
     			t0 = text(t0_value);
     			t1 = space();
     			div1 = element("div");
@@ -2153,6 +2193,7 @@ var app = (function () {
     			t3 = space();
     			if (if_block) if_block.c();
     			t4 = space();
+    			attr(a, "href", "javascript:void(0)");
     			attr(div0, "id", "project-link");
     			attr(div0, "class", "left svelte-gj3fok");
     			attr(div1, "class", "right svelte-gj3fok");
@@ -2165,7 +2206,8 @@ var app = (function () {
     			append(div4, div3);
     			append(div3, div2);
     			append(div2, div0);
-    			append(div0, t0);
+    			append(div0, a);
+    			append(a, t0);
     			append(div2, t1);
     			append(div2, div1);
     			append(div1, t2);
@@ -2176,7 +2218,7 @@ var app = (function () {
 
     			if (!mounted) {
     				dispose = [
-    					listen(div0, "click", click_handler),
+    					listen(a, "click", click_handler),
     					listen(div3, "click", /*click_handler_1*/ ctx[4])
     				];
 
