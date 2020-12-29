@@ -96,9 +96,10 @@
                 <div class="career-box-1">
                     <div
                         id="company-link"
-                        class="left"
-                        on:click={() => openSite(work.company.site)}>
-                        {work.company.name}
+                        class="left">
+                        <a on:click={() => openSite(work.company.site)} href="javascript:void(0)">
+                            {work.company.name}
+                        </a>
                     </div>
                     <div class="right">{work.location}</div>
                 </div>

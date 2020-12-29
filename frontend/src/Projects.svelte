@@ -94,9 +94,8 @@
             <div class="project-box-1">
                 <div
                     id="project-link"
-                    class="left"
-                    on:click={() => openSite(proj.project.site)}>
-                    {proj.project.name}
+                    class="left">
+                    <a on:click={() => openSite(proj.project.site)} href="javascript:void(0)"> {proj.project.name}</a>
                 </div>
                 <div class="right">{proj.project.date}</div>
             </div>

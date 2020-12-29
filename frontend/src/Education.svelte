@@ -106,9 +106,8 @@
                 <div class="education-box-1">
                     <div
                         id="school-link"
-                        class="left"
-                        on:click={() => openSite(edu.school.site)}>
-                        {edu.school.name}
+                        class="left">
+                        <a on:click={() => openSite(edu.school.site)} href="javascript:void(0)"> {edu.school.name}</a>
                     </div>
                     <div class="right">{edu.location}</div>
                 </div>
