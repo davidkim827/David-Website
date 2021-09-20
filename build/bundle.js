@@ -589,7 +589,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (115:8) {#if i % 3 == 0}
+    // (123:8) {#if i % 3 == 0}
     function create_if_block(ctx) {
     	let br;
 
@@ -606,7 +606,7 @@ var app = (function () {
     	};
     }
 
-    // (114:4) {#each skills as skill, i}
+    // (122:4) {#each skills as skill, i}
     function create_each_block(ctx) {
     	let t0;
     	let button;
@@ -741,7 +741,15 @@ var app = (function () {
     		site: "https://www.splunk.com/en_us/software/splunk-security-orchestration-and-automation.html"
     	},
     	{
-    		skill: "AppSec/Security Tooling",
+    		skill: "Kenna VM",
+    		site: "https://www.kennasecurity.com/"
+    	},
+    	{
+    		skill: "Nessus",
+    		site: "https://www.tenable.com/products/nessus"
+    	},
+    	{
+    		skill: "Application Security",
     		site: "https://en.wikipedia.org/wiki/Application_security"
     	},
     	{
