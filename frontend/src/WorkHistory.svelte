@@ -10,6 +10,19 @@
 
     const workItems = [
         {
+            company: { name: "Northwestern Mutual Insurance", site: "https://www.northwesternmutual.com/" },
+            location: "New York, NY",
+            position: "Security Automation Engineer",
+            dates: "May 2021 - Present",
+            descriptions: [
+                "Developed Encoder/Decoder Splunk app in Python for Threat Detection team, reducing time spent on SPL search development by 25%",
+                "Migrated existing codebases from Python 2.x to 3.x and incorporated CI/unit testing to code repos",
+                "Created Phantom SOAR playbooks to automate existing IR manual processes, reducing workflow times by 50%+",
+                "Developed Splunk app for Insider Threat team to allow users' Slack usage auditing",
+                "Configured Splunk Phantom Addon to automatically send notable events to Phantom",
+            ],
+        },
+        {
             company: { name: "HSBC", site: "https://www.hsbc.com/" },
             location: "Jersey City, NJ",
             position: "Security Automation Engineer",
@@ -48,7 +61,8 @@
                 "Created daily briefs for company executives on latest trends and topics in National and Homeland security matters"
             ],
         },
-    ];
+    ];    
+
 </script>
 
 <style>
