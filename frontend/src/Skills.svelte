@@ -9,6 +9,14 @@
             site: "https://securitytrails.com/blog/security-automation",
         },
         {
+            skill: "Splunk SPL",
+            site: "https://www.splunk.com/en_us/resources/search-processing-language.html",
+        },
+        {
+            skill: "Splunk SOAR (Phantom)",
+            site: "https://www.splunk.com/en_us/software/splunk-security-orchestration-and-automation.html",
+        },
+        {
             skill: "AppSec/Security Tooling",
             site: "https://en.wikipedia.org/wiki/Application_security",
         },
@@ -21,7 +29,6 @@
             skill: "Web Development",
             site: "https://en.wikipedia.org/wiki/Web_development",
         },
-        { skill: "Python", site: "https://www.python.org/" },
         { skill: "JS (Svelte)", site: "https://svelte.dev/" },
         {
             skill: "Data Analytics",
