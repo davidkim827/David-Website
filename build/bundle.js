@@ -589,7 +589,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (108:8) {#if i % 3 == 0}
+    // (115:8) {#if i % 3 == 0}
     function create_if_block(ctx) {
     	let br;
 
@@ -606,7 +606,7 @@ var app = (function () {
     	};
     }
 
-    // (107:4) {#each skills as skill, i}
+    // (114:4) {#each skills as skill, i}
     function create_each_block(ctx) {
     	let t0;
     	let button;
@@ -725,8 +725,20 @@ var app = (function () {
 
     const skills = [
     	{
+    		skill: "Python",
+    		site: "https://www.python.org/"
+    	},
+    	{
     		skill: "Security Automation",
     		site: "https://securitytrails.com/blog/security-automation"
+    	},
+    	{
+    		skill: "Splunk SPL",
+    		site: "https://www.splunk.com/en_us/resources/search-processing-language.html"
+    	},
+    	{
+    		skill: "Splunk SOAR (Phantom)",
+    		site: "https://www.splunk.com/en_us/software/splunk-security-orchestration-and-automation.html"
     	},
     	{
     		skill: "AppSec/Security Tooling",
@@ -739,10 +751,6 @@ var app = (function () {
     	{
     		skill: "Web Development",
     		site: "https://en.wikipedia.org/wiki/Web_development"
-    	},
-    	{
-    		skill: "Python",
-    		site: "https://www.python.org/"
     	},
     	{
     		skill: "JS (Svelte)",
@@ -1218,7 +1226,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (125:12) {#if visible}
+    // (139:12) {#if visible}
     function create_if_block$2(ctx) {
     	let div;
     	let ul;
@@ -1300,7 +1308,7 @@ var app = (function () {
     	};
     }
 
-    // (130:24) {#each work.descriptions as description}
+    // (144:24) {#each work.descriptions as description}
     function create_each_block_1(ctx) {
     	let li;
     	let t_value = /*description*/ ctx[8] + "";
@@ -1322,7 +1330,7 @@ var app = (function () {
     	};
     }
 
-    // (107:4) {#each workItems as work}
+    // (121:4) {#each workItems as work}
     function create_each_block$1(ctx) {
     	let div7;
     	let div6;
@@ -1557,6 +1565,22 @@ var app = (function () {
     	}
 
     	const workItems = [
+    		{
+    			company: {
+    				name: "Northwestern Mutual Insurance",
+    				site: "https://www.northwesternmutual.com/"
+    			},
+    			location: "New York, NY",
+    			position: "Security Automation Engineer",
+    			dates: "May 2021 - Present",
+    			descriptions: [
+    				"Developed Encoder/Decoder Splunk app in Python for Threat Detection team, reducing time spent on SPL search development by 25%",
+    				"Migrated existing codebases from Python 2.x to 3.x and incorporated CI/unit testing to code repos",
+    				"Created Phantom SOAR playbooks to automate existing IR manual processes, reducing workflow times by 50%+",
+    				"Developed Splunk app for Insider Threat team to allow users' Slack usage auditing",
+    				"Configured Splunk Phantom Addon to automatically send notable events to Phantom"
+    			]
+    		},
     		{
     			company: {
     				name: "HSBC",
@@ -2862,7 +2886,7 @@ var app = (function () {
     			t6 = space();
     			div2 = element("div");
     			p = element("p");
-    			p.textContent = `${job} with ${yearsExperience} years in Security`;
+    			p.textContent = `${job} with ${/*yearsExperience*/ ctx[0]} years in Security`;
     			t11 = space();
     			create_component(skills.$$.fragment);
     			t12 = space();
@@ -2920,12 +2944,16 @@ var app = (function () {
 
     const name = "DAVID KIM";
     const job = "Software Engineer";
-    const yearsExperience = 1.5;
+
+    function instance$8($$self) {
+    	const yearsExperience = new Date().getFullYear() - 2019;
+    	return [yearsExperience];
+    }
 
     class App extends SvelteComponent {
     	constructor(options) {
     		super();
-    		init(this, options, null, create_fragment$9, safe_not_equal, {});
+    		init(this, options, instance$8, create_fragment$9, safe_not_equal, {});
     	}
     }
 
