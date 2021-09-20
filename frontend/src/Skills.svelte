@@ -4,8 +4,8 @@
     }
 
     const skills = [
-        {
-            skill: "Security Automation",
+        { skill: "Python", site: "https://www.python.org/" },
+        {   skill: "Security Automation",
             site: "https://securitytrails.com/blog/security-automation",
         },
         {
