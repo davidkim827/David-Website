@@ -17,7 +17,15 @@
             site: "https://www.splunk.com/en_us/software/splunk-security-orchestration-and-automation.html",
         },
         {
-            skill: "AppSec/Security Tooling",
+            skill: "Kenna VM",
+            site: "https://www.kennasecurity.com/",
+        },
+        {
+            skill: "Nessus",
+            site: "https://www.tenable.com/products/nessus",
+        },
+        {
+            skill: "Application Security",
             site: "https://en.wikipedia.org/wiki/Application_security",
         },
         {
