@@ -1,10 +1,10 @@
 <script>
 	import Skills from "./Skills.svelte";
 	import NavBar from "./NavBar.svelte";
-
+	
 	const name = "DAVID KIM";
 	const job = "Software Engineer";
-	const yearsExperience = 1.5;
+	const yearsExperience = new Date().getFullYear() - 2019;
 </script>
 
 <style>
