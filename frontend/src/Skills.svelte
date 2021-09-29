@@ -9,6 +9,14 @@
             site: "https://securitytrails.com/blog/security-automation",
         },
         {
+            skill: "Fuzzing/Unit Testing",
+            site: "https://en.wikipedia.org/wiki/Fuzzing",
+        },
+        {
+            skill: "Atheris",
+            site: "https://github.com/google/atheris",
+        },
+        {
             skill: "Splunk SPL",
             site: "https://www.splunk.com/en_us/resources/search-processing-language.html",
         },
