@@ -16,9 +16,10 @@
             dates: "May 2021 - Present",
             descriptions: [
                 "Developed Encoder/Decoder Splunk app in Python for Threat Detection team, reducing time spent on SPL search development by 25%",
+                "Developed Splunk app for Insider Threat team to allow users' Slack usage auditing",
+                "Fuzzed own apps using atheris to ensure minimal bugs",
                 "Migrated existing codebases from Python 2.x to 3.x and incorporated CI/unit testing to code repos",
                 "Created Phantom SOAR playbooks to automate existing IR manual processes, reducing workflow times by 50%+",
-                "Developed Splunk app for Insider Threat team to allow users' Slack usage auditing",
                 "Configured Splunk Phantom Addon to automatically send notable events to Phantom",
             ],
         },
@@ -98,7 +99,7 @@
     .career {
         width: 500px;
         margin: auto;
-        padding: 20px;
+        padding: 18px;
     }
     .career-box-1 {
         margin: auto;
@@ -112,6 +113,10 @@
     .description-box {
         margin: auto;
         padding: 10px;
+    }
+
+    .item{
+        margin: 10px;
     }
 </style>
 
@@ -142,7 +147,7 @@
                     class="description-box">
                     <ul class="show-data">
                         {#each work.descriptions as description}
-                            <li>{description}</li>
+                            <li class="item">{description}</li>
                         {/each}
                     </ul>
                 </div>
