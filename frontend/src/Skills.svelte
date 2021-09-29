@@ -111,7 +111,6 @@
     }
 
     button span:after {
-        content: " >";
         position: relative;
         opacity: 0;
         transition: 0.5s;
