@@ -589,7 +589,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (131:8) {#if i % 3 == 0}
+    // (130:8) {#if i % 3 == 0}
     function create_if_block(ctx) {
     	let br;
 
@@ -606,7 +606,7 @@ var app = (function () {
     	};
     }
 
-    // (130:4) {#each skills as skill, i}
+    // (129:4) {#each skills as skill, i}
     function create_each_block(ctx) {
     	let t0;
     	let button;
@@ -630,9 +630,9 @@ var app = (function () {
     			span = element("span");
     			t1 = text(t1_value);
     			t2 = space();
-    			attr(span, "class", "svelte-125j3bq");
+    			attr(span, "class", "svelte-ytjdpq");
     			attr(button, "type", "button");
-    			attr(button, "class", "buttons svelte-125j3bq");
+    			attr(button, "class", "buttons svelte-ytjdpq");
     		},
     		m(target, anchor) {
     			if (if_block) if_block.m(target, anchor);
@@ -677,7 +677,7 @@ var app = (function () {
     				each_blocks[i].c();
     			}
 
-    			attr(div, "class", "flex-parent jc-center svelte-125j3bq");
+    			attr(div, "class", "flex-parent jc-center svelte-ytjdpq");
     		},
     		m(target, anchor) {
     			insert(target, div, anchor);
