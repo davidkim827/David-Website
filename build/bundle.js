@@ -66,12 +66,22 @@ var app = (function () {
         }
         return $$scope.dirty;
     }
-    function update_slot(slot, slot_definition, ctx, $$scope, dirty, get_slot_changes_fn, get_slot_context_fn) {
-        const slot_changes = get_slot_changes(slot_definition, $$scope, dirty, get_slot_changes_fn);
+    function update_slot_base(slot, slot_definition, ctx, $$scope, slot_changes, get_slot_context_fn) {
         if (slot_changes) {
             const slot_context = get_slot_context(slot_definition, ctx, $$scope, get_slot_context_fn);
             slot.p(slot_context, slot_changes);
         }
+    }
+    function get_all_dirty_from_scope($$scope) {
+        if ($$scope.ctx.length > 32) {
+            const dirty = [];
+            const length = $$scope.ctx.length / 32;
+            for (let i = 0; i < length; i++) {
+                dirty[i] = -1;
+            }
+            return dirty;
+        }
+        return -1;
     }
 
     const is_client = typeof window !== 'undefined';
@@ -108,9 +118,26 @@ var app = (function () {
             }
         };
     }
-
     function append(target, node) {
         target.appendChild(node);
+    }
+    function get_root_for_style(node) {
+        if (!node)
+            return document;
+        const root = node.getRootNode ? node.getRootNode() : node.ownerDocument;
+        if (root && root.host) {
+            return root;
+        }
+        return node.ownerDocument;
+    }
+    function append_empty_stylesheet(node) {
+        const style_element = element('style');
+        append_stylesheet(get_root_for_style(node), style_element);
+        return style_element.sheet;
+    }
+    function append_stylesheet(node, style) {
+        append(node.head || node, style);
+        return style.sheet;
     }
     function insert(target, node, anchor) {
         target.insertBefore(node, anchor || null);
@@ -152,13 +179,15 @@ var app = (function () {
     function toggle_class(element, name, toggle) {
         element.classList[toggle ? 'add' : 'remove'](name);
     }
-    function custom_event(type, detail) {
+    function custom_event(type, detail, { bubbles = false, cancelable = false } = {}) {
         const e = document.createEvent('CustomEvent');
-        e.initCustomEvent(type, false, false, detail);
+        e.initCustomEvent(type, bubbles, cancelable, detail);
         return e;
     }
 
-    const active_docs = new Set();
+    // we need to store the information for multiple documents because a Svelte application could also contain iframes
+    // https://github.com/sveltejs/svelte/issues/3624
+    const managed_styles = new Map();
     let active = 0;
     // https://github.com/darkskyapp/string-hash/blob/master/index.js
     function hash(str) {
@@ -167,6 +196,11 @@ var app = (function () {
         while (i--)
             hash = ((hash << 5) - hash) ^ str.charCodeAt(i);
         return hash >>> 0;
+    }
+    function create_style_information(doc, node) {
+        const info = { stylesheet: append_empty_stylesheet(node), rules: {} };
+        managed_styles.set(doc, info);
+        return info;
     }
     function create_rule(node, a, b, duration, delay, ease, fn, uid = 0) {
         const step = 16.666 / duration;
@@ -177,12 +211,10 @@ var app = (function () {
         }
         const rule = keyframes + `100% {${fn(b, 1 - b)}}\n}`;
         const name = `__svelte_${hash(rule)}_${uid}`;
-        const doc = node.ownerDocument;
-        active_docs.add(doc);
-        const stylesheet = doc.__svelte_stylesheet || (doc.__svelte_stylesheet = doc.head.appendChild(element('style')).sheet);
-        const current_rules = doc.__svelte_rules || (doc.__svelte_rules = {});
-        if (!current_rules[name]) {
-            current_rules[name] = true;
+        const doc = get_root_for_style(node);
+        const { stylesheet, rules } = managed_styles.get(doc) || create_style_information(doc, node);
+        if (!rules[name]) {
+            rules[name] = true;
             stylesheet.insertRule(`@keyframes ${name} ${rule}`, stylesheet.cssRules.length);
         }
         const animation = node.style.animation || '';
@@ -208,14 +240,13 @@ var app = (function () {
         raf(() => {
             if (active)
                 return;
-            active_docs.forEach(doc => {
-                const stylesheet = doc.__svelte_stylesheet;
-                let i = stylesheet.cssRules.length;
-                while (i--)
-                    stylesheet.deleteRule(i);
-                doc.__svelte_rules = {};
+            managed_styles.forEach(info => {
+                const { ownerNode } = info.stylesheet;
+                // there is no ownerNode if it runs on jsdom.
+                if (ownerNode)
+                    detach(ownerNode);
             });
-            active_docs.clear();
+            managed_styles.clear();
         });
     }
 
@@ -233,6 +264,7 @@ var app = (function () {
     }
     function setContext(key, context) {
         get_current_component().$$.context.set(key, context);
+        return context;
     }
     function getContext(key) {
         return get_current_component().$$.context.get(key);
@@ -253,22 +285,40 @@ var app = (function () {
     function add_render_callback(fn) {
         render_callbacks.push(fn);
     }
-    let flushing = false;
+    // flush() calls callbacks in this order:
+    // 1. All beforeUpdate callbacks, in order: parents before children
+    // 2. All bind:this callbacks, in reverse order: children before parents.
+    // 3. All afterUpdate callbacks, in order: parents before children. EXCEPT
+    //    for afterUpdates called during the initial onMount, which are called in
+    //    reverse order: children before parents.
+    // Since callbacks might update component values, which could trigger another
+    // call to flush(), the following steps guard against this:
+    // 1. During beforeUpdate, any updated components will be added to the
+    //    dirty_components array and will cause a reentrant call to flush(). Because
+    //    the flush index is kept outside the function, the reentrant call will pick
+    //    up where the earlier call left off and go through all dirty components. The
+    //    current_component value is saved and restored so that the reentrant call will
+    //    not interfere with the "parent" flush() call.
+    // 2. bind:this callbacks cannot trigger new flush() calls.
+    // 3. During afterUpdate, any updated components will NOT have their afterUpdate
+    //    callback called a second time; the seen_callbacks set, outside the flush()
+    //    function, guarantees this behavior.
     const seen_callbacks = new Set();
+    let flushidx = 0; // Do *not* move this inside the flush() function
     function flush() {
-        if (flushing)
-            return;
-        flushing = true;
+        const saved_component = current_component;
         do {
             // first, call beforeUpdate functions
             // and update components
-            for (let i = 0; i < dirty_components.length; i += 1) {
-                const component = dirty_components[i];
+            while (flushidx < dirty_components.length) {
+                const component = dirty_components[flushidx];
+                flushidx++;
                 set_current_component(component);
                 update(component.$$);
             }
             set_current_component(null);
             dirty_components.length = 0;
+            flushidx = 0;
             while (binding_callbacks.length)
                 binding_callbacks.pop()();
             // then, once components are updated, call
@@ -288,8 +338,8 @@ var app = (function () {
             flush_callbacks.pop()();
         }
         update_scheduled = false;
-        flushing = false;
         seen_callbacks.clear();
+        set_current_component(saved_component);
     }
     function update($$) {
         if ($$.fragment !== null) {
@@ -351,6 +401,9 @@ var app = (function () {
             });
             block.o(local);
         }
+        else if (callback) {
+            callback();
+        }
     }
     const null_transition = { duration: 0 };
     function create_bidirectional_transition(node, fn, params, intro) {
@@ -364,7 +417,7 @@ var app = (function () {
                 delete_rule(node, animation_name);
         }
         function init(program, duration) {
-            const d = program.b - t;
+            const d = (program.b - t);
             duration *= Math.abs(d);
             return {
                 a: t,
@@ -461,22 +514,24 @@ var app = (function () {
     function create_component(block) {
         block && block.c();
     }
-    function mount_component(component, target, anchor) {
+    function mount_component(component, target, anchor, customElement) {
         const { fragment, on_mount, on_destroy, after_update } = component.$$;
         fragment && fragment.m(target, anchor);
-        // onMount happens before the initial afterUpdate
-        add_render_callback(() => {
-            const new_on_destroy = on_mount.map(run).filter(is_function);
-            if (on_destroy) {
-                on_destroy.push(...new_on_destroy);
-            }
-            else {
-                // Edge case - component was destroyed immediately,
-                // most likely as a result of a binding initialising
-                run_all(new_on_destroy);
-            }
-            component.$$.on_mount = [];
-        });
+        if (!customElement) {
+            // onMount happens before the initial afterUpdate
+            add_render_callback(() => {
+                const new_on_destroy = on_mount.map(run).filter(is_function);
+                if (on_destroy) {
+                    on_destroy.push(...new_on_destroy);
+                }
+                else {
+                    // Edge case - component was destroyed immediately,
+                    // most likely as a result of a binding initialising
+                    run_all(new_on_destroy);
+                }
+                component.$$.on_mount = [];
+            });
+        }
         after_update.forEach(add_render_callback);
     }
     function destroy_component(component, detaching) {
@@ -498,10 +553,9 @@ var app = (function () {
         }
         component.$$.dirty[(i / 31) | 0] |= (1 << (i % 31));
     }
-    function init(component, options, instance, create_fragment, not_equal, props, dirty = [-1]) {
+    function init(component, options, instance, create_fragment, not_equal, props, append_styles, dirty = [-1]) {
         const parent_component = current_component;
         set_current_component(component);
-        const prop_values = options.props || {};
         const $$ = component.$$ = {
             fragment: null,
             ctx: null,
@@ -513,17 +567,20 @@ var app = (function () {
             // lifecycle
             on_mount: [],
             on_destroy: [],
+            on_disconnect: [],
             before_update: [],
             after_update: [],
-            context: new Map(parent_component ? parent_component.$$.context : []),
+            context: new Map(options.context || (parent_component ? parent_component.$$.context : [])),
             // everything else
             callbacks: blank_object(),
             dirty,
-            skip_bound: false
+            skip_bound: false,
+            root: options.target || parent_component.$$.root
         };
+        append_styles && append_styles($$.root);
         let ready = false;
         $$.ctx = instance
-            ? instance(component, prop_values, (i, ret, ...rest) => {
+            ? instance(component, options.props || {}, (i, ret, ...rest) => {
                 const value = rest.length ? rest[0] : ret;
                 if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
                     if (!$$.skip_bound && $$.bound[i])
@@ -552,11 +609,14 @@ var app = (function () {
             }
             if (options.intro)
                 transition_in(component.$$.fragment);
-            mount_component(component, options.target, options.anchor);
+            mount_component(component, options.target, options.anchor, options.customElement);
             flush();
         }
         set_current_component(parent_component);
     }
+    /**
+     * Base class for Svelte components. Used when dev=false.
+     */
     class SvelteComponent {
         $destroy() {
             destroy_component(this, 1);
@@ -580,7 +640,7 @@ var app = (function () {
         }
     }
 
-    /* src\Skills.svelte generated by Svelte v3.30.0 */
+    /* src\Skills.svelte generated by Svelte v3.50.1 */
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
@@ -589,7 +649,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (130:8) {#if i % 3 == 0}
+    // (54:8) {#if i % 3 == 0}
     function create_if_block(ctx) {
     	let br;
 
@@ -606,7 +666,7 @@ var app = (function () {
     	};
     }
 
-    // (129:4) {#each skills as skill, i}
+    // (53:4) {#each skills as skill, i}
     function create_each_block(ctx) {
     	let t0;
     	let button;
@@ -729,27 +789,39 @@ var app = (function () {
     		site: "https://www.python.org/"
     	},
     	{
+    		skill: "Java",
+    		site: "https://www.java.com/en/"
+    	},
+    	{
     		skill: "Security Automation",
     		site: "https://securitytrails.com/blog/security-automation"
     	},
     	{
-    		skill: "Fuzzing/Unit Testing",
-    		site: "https://en.wikipedia.org/wiki/Fuzzing"
+    		skill: "Application Security",
+    		site: "https://en.wikipedia.org/wiki/Application_security"
     	},
     	{
-    		skill: "Atheris",
-    		site: "https://github.com/google/atheris"
+    		skill: "Threat Modeling",
+    		site: "https://owasp.org/www-community/Threat_Modeling"
     	},
     	{
-    		skill: "Splunk SPL",
-    		site: "https://www.splunk.com/en_us/resources/search-processing-language.html"
+    		skill: "Secure Design Review",
+    		site: "https://www.securityinnovation.com/services/application-security-consulting-services/architecture-and-design-review/"
     	},
     	{
-    		skill: "Splunk SOAR (Phantom)",
-    		site: "https://www.splunk.com/en_us/software/splunk-security-orchestration-and-automation.html"
+    		skill: "Secure Code Review",
+    		site: "https://www.securityjourney.com/en/post/secure-code-review-best-practices"
     	},
     	{
-    		skill: "Kenna VM",
+    		skill: "SAST",
+    		site: "https://en.wikipedia.org/wiki/Static_application_security_testing"
+    	},
+    	{
+    		skill: "Splunk SPL & SOAR(Phantom)",
+    		site: "https://www.splunk.com"
+    	},
+    	{
+    		skill: "Kenna",
     		site: "https://www.kennasecurity.com/"
     	},
     	{
@@ -757,32 +829,8 @@ var app = (function () {
     		site: "https://www.tenable.com/products/nessus"
     	},
     	{
-    		skill: "Application Security",
-    		site: "https://en.wikipedia.org/wiki/Application_security"
-    	},
-    	{
-    		skill: "Vulnerability Assessments",
-    		site: "https://searchsecurity.techtarget.com/definition/vulnerability-assessment-vulnerability-analysis"
-    	},
-    	{
-    		skill: "Web Development",
-    		site: "https://en.wikipedia.org/wiki/Web_development"
-    	},
-    	{
-    		skill: "JS (Svelte)",
-    		site: "https://svelte.dev/"
-    	},
-    	{
-    		skill: "Data Analytics",
-    		site: "https://en.wikipedia.org/wiki/Data_analysis"
-    	},
-    	{
-    		skill: "Databases (SQL/NoSQL)",
-    		site: "https://www.mongodb.com/nosql-explained/nosql-vs-sql"
-    	},
-    	{
-    		skill: "Microservices",
-    		site: "https://en.wikipedia.org/wiki/Microservices"
+    		skill: "Webapp Development (Django/Flask/FastAPI)",
+    		site: "https://www.fullstackpython.com/web-development.html"
     	}
     ];
 
@@ -806,16 +854,15 @@ var app = (function () {
      */
     function writable(value, start = noop) {
         let stop;
-        const subscribers = [];
+        const subscribers = new Set();
         function set(new_value) {
             if (safe_not_equal(value, new_value)) {
                 value = new_value;
                 if (stop) { // store is ready
                     const run_queue = !subscriber_queue.length;
-                    for (let i = 0; i < subscribers.length; i += 1) {
-                        const s = subscribers[i];
-                        s[1]();
-                        subscriber_queue.push(s, value);
+                    for (const subscriber of subscribers) {
+                        subscriber[1]();
+                        subscriber_queue.push(subscriber, value);
                     }
                     if (run_queue) {
                         for (let i = 0; i < subscriber_queue.length; i += 2) {
@@ -831,17 +878,14 @@ var app = (function () {
         }
         function subscribe(run, invalidate = noop) {
             const subscriber = [run, invalidate];
-            subscribers.push(subscriber);
-            if (subscribers.length === 1) {
+            subscribers.add(subscriber);
+            if (subscribers.size === 1) {
                 stop = start(set) || noop;
             }
             run(value);
             return () => {
-                const index = subscribers.indexOf(subscriber);
-                if (index !== -1) {
-                    subscribers.splice(index, 1);
-                }
-                if (subscribers.length === 0) {
+                subscribers.delete(subscriber);
+                if (subscribers.size === 0) {
                     stop();
                     stop = null;
                 }
@@ -850,7 +894,7 @@ var app = (function () {
         return { set, update, subscribe };
     }
 
-    /* src\Tabs\Tabs.svelte generated by Svelte v3.30.0 */
+    /* src\Tabs\Tabs.svelte generated by Svelte v3.50.1 */
 
     function create_fragment$1(ctx) {
     	let div;
@@ -875,8 +919,17 @@ var app = (function () {
     		},
     		p(ctx, [dirty]) {
     			if (default_slot) {
-    				if (default_slot.p && dirty & /*$$scope*/ 1) {
-    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[0], dirty, null, null);
+    				if (default_slot.p && (!current || dirty & /*$$scope*/ 1)) {
+    					update_slot_base(
+    						default_slot,
+    						default_slot_template,
+    						ctx,
+    						/*$$scope*/ ctx[0],
+    						!current
+    						? get_all_dirty_from_scope(/*$$scope*/ ctx[0])
+    						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[0], dirty, null),
+    						null
+    					);
     				}
     			}
     		},
@@ -942,7 +995,7 @@ var app = (function () {
     	});
 
     	$$self.$$set = $$props => {
-    		if ("$$scope" in $$props) $$invalidate(0, $$scope = $$props.$$scope);
+    		if ('$$scope' in $$props) $$invalidate(0, $$scope = $$props.$$scope);
     	};
 
     	return [$$scope, slots];
@@ -955,7 +1008,7 @@ var app = (function () {
     	}
     }
 
-    /* src\Tabs\TabList.svelte generated by Svelte v3.30.0 */
+    /* src\Tabs\TabList.svelte generated by Svelte v3.50.1 */
 
     function create_fragment$2(ctx) {
     	let div;
@@ -980,8 +1033,17 @@ var app = (function () {
     		},
     		p(ctx, [dirty]) {
     			if (default_slot) {
-    				if (default_slot.p && dirty & /*$$scope*/ 1) {
-    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[0], dirty, null, null);
+    				if (default_slot.p && (!current || dirty & /*$$scope*/ 1)) {
+    					update_slot_base(
+    						default_slot,
+    						default_slot_template,
+    						ctx,
+    						/*$$scope*/ ctx[0],
+    						!current
+    						? get_all_dirty_from_scope(/*$$scope*/ ctx[0])
+    						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[0], dirty, null),
+    						null
+    					);
     				}
     			}
     		},
@@ -1005,7 +1067,7 @@ var app = (function () {
     	let { $$slots: slots = {}, $$scope } = $$props;
 
     	$$self.$$set = $$props => {
-    		if ("$$scope" in $$props) $$invalidate(0, $$scope = $$props.$$scope);
+    		if ('$$scope' in $$props) $$invalidate(0, $$scope = $$props.$$scope);
     	};
 
     	return [$$scope, slots];
@@ -1018,7 +1080,7 @@ var app = (function () {
     	}
     }
 
-    /* src\Tabs\TabPanel.svelte generated by Svelte v3.30.0 */
+    /* src\Tabs\TabPanel.svelte generated by Svelte v3.50.1 */
 
     function create_if_block$1(ctx) {
     	let current;
@@ -1038,8 +1100,17 @@ var app = (function () {
     		},
     		p(ctx, dirty) {
     			if (default_slot) {
-    				if (default_slot.p && dirty & /*$$scope*/ 8) {
-    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[3], dirty, null, null);
+    				if (default_slot.p && (!current || dirty & /*$$scope*/ 8)) {
+    					update_slot_base(
+    						default_slot,
+    						default_slot_template,
+    						ctx,
+    						/*$$scope*/ ctx[3],
+    						!current
+    						? get_all_dirty_from_scope(/*$$scope*/ ctx[3])
+    						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[3], dirty, null),
+    						null
+    					);
     				}
     			}
     		},
@@ -1122,7 +1193,7 @@ var app = (function () {
     	registerPanel(panel);
 
     	$$self.$$set = $$props => {
-    		if ("$$scope" in $$props) $$invalidate(3, $$scope = $$props.$$scope);
+    		if ('$$scope' in $$props) $$invalidate(3, $$scope = $$props.$$scope);
     	};
 
     	return [$selectedPanel, panel, selectedPanel, $$scope, slots];
@@ -1135,7 +1206,7 @@ var app = (function () {
     	}
     }
 
-    /* src\Tabs\Tab.svelte generated by Svelte v3.30.0 */
+    /* src\Tabs\Tab.svelte generated by Svelte v3.50.1 */
 
     function create_fragment$4(ctx) {
     	let button;
@@ -1168,12 +1239,21 @@ var app = (function () {
     		},
     		p(ctx, [dirty]) {
     			if (default_slot) {
-    				if (default_slot.p && dirty & /*$$scope*/ 16) {
-    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[4], dirty, null, null);
+    				if (default_slot.p && (!current || dirty & /*$$scope*/ 16)) {
+    					update_slot_base(
+    						default_slot,
+    						default_slot_template,
+    						ctx,
+    						/*$$scope*/ ctx[4],
+    						!current
+    						? get_all_dirty_from_scope(/*$$scope*/ ctx[4])
+    						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[4], dirty, null),
+    						null
+    					);
     				}
     			}
 
-    			if (dirty & /*$selectedTab, tab*/ 3) {
+    			if (!current || dirty & /*$selectedTab, tab*/ 3) {
     				toggle_class(button, "selected", /*$selectedTab*/ ctx[0] === /*tab*/ ctx[1]);
     			}
     		},
@@ -1205,7 +1285,7 @@ var app = (function () {
     	const click_handler = () => selectTab(tab);
 
     	$$self.$$set = $$props => {
-    		if ("$$scope" in $$props) $$invalidate(4, $$scope = $$props.$$scope);
+    		if ('$$scope' in $$props) $$invalidate(4, $$scope = $$props.$$scope);
     	};
 
     	return [$selectedTab, tab, selectTab, selectedTab, $$scope, slots, click_handler];
@@ -1218,7 +1298,7 @@ var app = (function () {
     	}
     }
 
-    function fade(node, { delay = 0, duration = 400, easing = identity }) {
+    function fade(node, { delay = 0, duration = 400, easing = identity } = {}) {
         const o = +getComputedStyle(node).opacity;
         return {
             delay,
@@ -1228,7 +1308,7 @@ var app = (function () {
         };
     }
 
-    /* src\WorkHistory.svelte generated by Svelte v3.30.0 */
+    /* src\WorkHistory.svelte generated by Svelte v3.50.1 */
 
     function get_each_context$1(ctx, list, i) {
     	const child_ctx = ctx.slice();
@@ -1242,7 +1322,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (144:12) {#if visible}
+    // (108:12) {#if visible}
     function create_if_block$2(ctx) {
     	let div;
     	let ul;
@@ -1265,7 +1345,7 @@ var app = (function () {
     			}
 
     			attr(ul, "class", "show-data");
-    			attr(div, "class", "description-box svelte-zgxvnw");
+    			attr(div, "class", "description-box svelte-1bllpd2");
     		},
     		m(target, anchor) {
     			insert(target, div, anchor);
@@ -1324,7 +1404,7 @@ var app = (function () {
     	};
     }
 
-    // (149:24) {#each work.descriptions as description}
+    // (114:24) {#each work.descriptions as description}
     function create_each_block_1(ctx) {
     	let li;
     	let t_value = /*description*/ ctx[8] + "";
@@ -1334,7 +1414,7 @@ var app = (function () {
     		c() {
     			li = element("li");
     			t = text(t_value);
-    			attr(li, "class", "item svelte-zgxvnw");
+    			attr(li, "class", "item svelte-1bllpd2");
     		},
     		m(target, anchor) {
     			insert(target, li, anchor);
@@ -1347,7 +1427,7 @@ var app = (function () {
     	};
     }
 
-    // (126:4) {#each workItems as work}
+    // (89:4) {#each workItems as work}
     function create_each_block$1(ctx) {
     	let div7;
     	let div6;
@@ -1404,14 +1484,14 @@ var app = (function () {
     			t8 = space();
     			attr(a, "href", "javascript:void(0)");
     			attr(div0, "id", "company-link");
-    			attr(div0, "class", "left svelte-zgxvnw");
-    			attr(div1, "class", "right svelte-zgxvnw");
-    			attr(div2, "class", "career-box-1 svelte-zgxvnw");
-    			attr(div3, "class", "left svelte-zgxvnw");
-    			attr(div4, "class", "right svelte-zgxvnw");
-    			attr(div5, "class", "career-box-2 svelte-zgxvnw");
-    			attr(div6, "class", "career svelte-zgxvnw");
-    			attr(div7, "class", "work svelte-zgxvnw");
+    			attr(div0, "class", "left svelte-1bllpd2");
+    			attr(div1, "class", "right svelte-1bllpd2");
+    			attr(div2, "class", "career-box-1 svelte-1bllpd2");
+    			attr(div3, "class", "left svelte-1bllpd2");
+    			attr(div4, "class", "right svelte-1bllpd2");
+    			attr(div5, "class", "career-box-2 svelte-1bllpd2");
+    			attr(div6, "class", "career svelte-1bllpd2");
+    			attr(div7, "class", "work svelte-1bllpd2");
     		},
     		m(target, anchor) {
     			insert(target, div7, anchor);
@@ -1510,7 +1590,7 @@ var app = (function () {
     				each_blocks[i].c();
     			}
 
-    			attr(div, "class", "work-history svelte-zgxvnw");
+    			attr(div, "class", "work-history svelte-1bllpd2");
     		},
     		m(target, anchor) {
     			insert(target, div, anchor);
@@ -1584,18 +1664,33 @@ var app = (function () {
     	const workItems = [
     		{
     			company: {
+    				name: "Amazon",
+    				site: "https://www.amazon.com/"
+    			},
+    			location: "New York, NY",
+    			position: "Appsec Automation Engineer",
+    			dates: "April 2022 - Present",
+    			descriptions: [
+    				"Created and released rules to contribute to AWS CodeGuru ruleset, resulting in proactive prevention of several vulnerability classes such as potential RCEs, Data Exfiltration, and more",
+    				"Revamped rule creation documentation for efficient workflow and onboarding",
+    				"Performed Threat Modeling and Design Review consultations for teams creating / releasing services",
+    				"Researched and implemented code abstractions to rule creation, resulting in approximately 70% reduction in time spent on rule writing"
+    			]
+    		},
+    		{
+    			company: {
     				name: "Northwestern Mutual Insurance",
     				site: "https://www.northwesternmutual.com/"
     			},
     			location: "New York, NY",
-    			position: "Security Automation Engineer",
-    			dates: "May 2021 - Present",
+    			position: "TD/IR Automation Engineer",
+    			dates: "May 2021 - April 2022",
     			descriptions: [
-    				"Developed Encoder/Decoder Splunk app in Python for Threat Detection team, reducing time spent on SPL search development by 25%",
-    				"Developed Splunk app for Insider Threat team to allow users' Slack usage auditing",
+    				"Developed custom encoder/decoder Splunk app in Python for Threat Detection team, reducing time spent on SPL search development by 25%",
+    				"Developed custom Splunk app for Insider Threat team to allow users' Slack usage auditing",
     				"Fuzzed own apps using atheris to ensure minimal bugs",
     				"Migrated existing codebases from Python 2.x to 3.x and incorporated CI/unit testing to code repos",
-    				"Created Phantom SOAR playbooks to automate existing IR manual processes, reducing workflow times by 50%+",
+    				"Created Phantom SOAR playbooks to automate existing IR manual processes, reducing workflow times by 50+%",
     				"Configured Splunk Phantom Addon to automatically send notable events to Phantom"
     			]
     		},
@@ -1605,7 +1700,7 @@ var app = (function () {
     				site: "https://www.hsbc.com/"
     			},
     			location: "Jersey City, NJ",
-    			position: "Security Automation Engineer",
+    			position: "Security Software Engineer",
     			dates: "Nov 2019 - Nov 2020",
     			descriptions: [
     				"Created and maintained in-house built vulnerability assessment to: 1) score vulnerabilities, 2) schedule vulnerability information updates 3) schedule data uploads to data aggregation platform (Kenna) ",
@@ -1655,7 +1750,7 @@ var app = (function () {
     	}
     }
 
-    /* src\Education.svelte generated by Svelte v3.30.0 */
+    /* src\Education.svelte generated by Svelte v3.50.1 */
 
     function get_each_context$2(ctx, list, i) {
     	const child_ctx = ctx.slice();
@@ -2044,7 +2139,7 @@ var app = (function () {
     			},
     			location: "Manassas, VA",
     			degree: "Continuing Education",
-    			gpa: 4,
+    			gpa: 4.00,
     			dates: "May 2017 - May 2018",
     			relevantCourses: [
     				"Linear Algebra",
@@ -2078,7 +2173,7 @@ var app = (function () {
     	}
     }
 
-    /* src\Projects.svelte generated by Svelte v3.30.0 */
+    /* src\Projects.svelte generated by Svelte v3.50.1 */
 
     function get_each_context$3(ctx, list, i) {
     	const child_ctx = ctx.slice();
@@ -2092,7 +2187,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (103:8) {#if visible}
+    // (76:12) {#if visible}
     function create_if_block$4(ctx) {
     	let div;
     	let ul;
@@ -2115,7 +2210,7 @@ var app = (function () {
     			}
 
     			attr(ul, "class", "show-data");
-    			attr(div, "class", "description-box svelte-gj3fok");
+    			attr(div, "class", "description-box svelte-1kshryc");
     		},
     		m(target, anchor) {
     			insert(target, div, anchor);
@@ -2174,7 +2269,7 @@ var app = (function () {
     	};
     }
 
-    // (108:20) {#each proj.description as desc}
+    // (82:24) {#each proj.description as desc}
     function create_each_block_1$2(ctx) {
     	let li;
     	let t_value = /*desc*/ ctx[8] + "";
@@ -2196,7 +2291,7 @@ var app = (function () {
     	};
     }
 
-    // (91:4) {#each projectItems as proj}
+    // (61:4) {#each projectItems as proj}
     function create_each_block$3(ctx) {
     	let div4;
     	let div3;
@@ -2237,11 +2332,11 @@ var app = (function () {
     			t4 = space();
     			attr(a, "href", "javascript:void(0)");
     			attr(div0, "id", "project-link");
-    			attr(div0, "class", "left svelte-gj3fok");
-    			attr(div1, "class", "right svelte-gj3fok");
-    			attr(div2, "class", "project-box-1 svelte-gj3fok");
-    			attr(div3, "class", "project svelte-gj3fok");
-    			attr(div4, "class", "proj svelte-gj3fok");
+    			attr(div0, "class", "left svelte-1kshryc");
+    			attr(div1, "class", "right svelte-1kshryc");
+    			attr(div2, "class", "project-box-1 svelte-1kshryc");
+    			attr(div3, "class", "project svelte-1kshryc");
+    			attr(div4, "class", "proj svelte-1kshryc");
     		},
     		m(target, anchor) {
     			insert(target, div4, anchor);
@@ -2333,7 +2428,7 @@ var app = (function () {
     				each_blocks[i].c();
     			}
 
-    			attr(div, "class", "project-history svelte-gj3fok");
+    			attr(div, "class", "project-history svelte-1kshryc");
     		},
     		m(target, anchor) {
     			insert(target, div, anchor);
@@ -2445,7 +2540,7 @@ var app = (function () {
     				site: "https://github.com/davidkim827/Screenshot-Bot"
     			},
     			description: [
-    				"Created script to automate full screen capture of 500+ webpages using Selenium WebDriver API/Python to reduce time spent by 95%+"
+    				"Created script to automate full screen capture of 500+ webpages using Selenium WebDriver API/Python to reduce time spent by 99%"
     			]
     		}
     	];
@@ -2462,7 +2557,7 @@ var app = (function () {
     	}
     }
 
-    /* src\NavBar.svelte generated by Svelte v3.30.0 */
+    /* src\NavBar.svelte generated by Svelte v3.50.1 */
 
     function create_default_slot_7(ctx) {
     	let h3;
@@ -2475,6 +2570,7 @@ var app = (function () {
     		m(target, anchor) {
     			insert(target, h3, anchor);
     		},
+    		p: noop,
     		d(detaching) {
     			if (detaching) detach(h3);
     		}
@@ -2493,6 +2589,7 @@ var app = (function () {
     		m(target, anchor) {
     			insert(target, h3, anchor);
     		},
+    		p: noop,
     		d(detaching) {
     			if (detaching) detach(h3);
     		}
@@ -2511,6 +2608,7 @@ var app = (function () {
     		m(target, anchor) {
     			insert(target, h3, anchor);
     		},
+    		p: noop,
     		d(detaching) {
     			if (detaching) detach(h3);
     		}
@@ -2863,7 +2961,7 @@ var app = (function () {
     	}
     }
 
-    /* src\App.svelte generated by Svelte v3.30.0 */
+    /* src\App.svelte generated by Svelte v3.50.1 */
 
     function create_fragment$9(ctx) {
     	let div4;
