@@ -1671,7 +1671,7 @@ var app = (function () {
     			position: "Appsec Automation Engineer",
     			dates: "April 2022 - Present",
     			descriptions: [
-    				"Created and released rules to contribute to AWS CodeGuru ruleset, resulting in proactive prevention of several vulnerability classes such as potential RCEs, Data Exfiltration, and more",
+    				"Created and released rules to contribute to in-house built SAST solution ruleset, resulting in proactive prevention of several vulnerability classes such as potential RCEs, Data Exfiltration, and more",
     				"Revamped rule creation documentation for efficient workflow and onboarding",
     				"Performed Threat Modeling and Design Review consultations for teams creating / releasing services",
     				"Researched and implemented code abstractions to rule creation, resulting in approximately 70% reduction in time spent on rule writing"
@@ -2986,7 +2986,7 @@ var app = (function () {
     		c() {
     			div4 = element("div");
     			div0 = element("div");
-    			div0.innerHTML = `<img src="./img/me_halloween_2014.jpg" alt="Me on Halloween 2014" width="250" height="250" class="svelte-p3xi6d"/>`;
+    			div0.innerHTML = `<img src="./img/me_halloween_2014.jpg" alt="Me on Halloween 2014" width="250" height="250" class="svelte-wa6frn"/>`;
     			t0 = space();
     			div3 = element("div");
     			h1 = element("h1");
@@ -2994,10 +2994,10 @@ var app = (function () {
     			t2 = space();
     			div1 = element("div");
 
-    			div1.innerHTML = `<a href="https://www.linkedin.com/in/dkim827/"><img class="contact-images svelte-p3xi6d" src="./img/linkedin.jpg" alt="My LinkedIn Page"/></a> 
-			<a href="mailto:davidkim827@gmail.com?subject=We Want to Hire YOU, David!"><img class="contact-images svelte-p3xi6d" src="./img/mail icon.png" alt="Email me!"/></a> 
-			<a href="https://github.com/davidkim827"><img class="contact-images svelte-p3xi6d" src="./img/github.png" alt="My Github Link!"/></a> 
-			<a href="https://www.google.com/maps/place/Brooklyn,+NY/@40.6451594,-74.0850816,11z/data=!3m1!4b1!4m5!3m4!1s0x89c24416947c2109:0x82765c7404007886!8m2!3d40.6781784!4d-73.9441579"><img class="contact-images svelte-p3xi6d" src="./img/location.jpeg" alt="Brooklyn is the best borough!"/></a>`;
+    			div1.innerHTML = `<a href="https://www.linkedin.com/in/dkim827/"><img class="contact-images svelte-wa6frn" src="./img/linkedin.png" alt="My LinkedIn Page"/></a> 
+			<a href="mailto:davidkim827@gmail.com?subject=We Want to Hire YOU, David!"><img class="contact-images svelte-wa6frn" src="./img/mail icon.png" alt="Email me!"/></a> 
+			<a href="https://github.com/davidkim827"><img class="contact-images svelte-wa6frn" src="./img/github.png" alt="My Github Link!"/></a> 
+			<a href="https://www.google.com/maps/place/Brooklyn,+NY/@40.6451594,-74.0850816,11z/data=!3m1!4b1!4m5!3m4!1s0x89c24416947c2109:0x82765c7404007886!8m2!3d40.6781784!4d-73.9441579"><img class="contact-images svelte-wa6frn" src="./img/location.jpeg" alt="Brooklyn is the best borough!"/></a>`;
 
     			t6 = space();
     			div2 = element("div");
@@ -3008,16 +3008,16 @@ var app = (function () {
     			t12 = space();
     			create_component(navbar.$$.fragment);
     			attr(div0, "id", "title");
-    			attr(div0, "class", "svelte-p3xi6d");
-    			attr(h1, "class", "name svelte-p3xi6d");
+    			attr(div0, "class", "svelte-wa6frn");
+    			attr(h1, "class", "name svelte-wa6frn");
     			attr(div1, "id", "contact-info");
-    			attr(div1, "class", "svelte-p3xi6d");
+    			attr(div1, "class", "svelte-wa6frn");
     			attr(div2, "id", "short-intro");
-    			attr(div2, "class", "svelte-p3xi6d");
+    			attr(div2, "class", "svelte-wa6frn");
     			attr(div3, "id", "heading");
-    			attr(div3, "class", "svelte-p3xi6d");
+    			attr(div3, "class", "svelte-wa6frn");
     			attr(div4, "id", "intro");
-    			attr(div4, "class", "svelte-p3xi6d");
+    			attr(div4, "class", "svelte-wa6frn");
     		},
     		m(target, anchor) {
     			insert(target, div4, anchor);
