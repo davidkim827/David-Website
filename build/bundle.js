@@ -1671,7 +1671,7 @@ var app = (function () {
     			position: "Appsec Automation Engineer",
     			dates: "April 2022 - Present",
     			descriptions: [
-    				"Created and released rules to contribute to in-house built SAST solution ruleset, resulting in proactive prevention of several vulnerability classes such as potential RCEs, Data Exfiltration, and more",
+    				"Created and released rules to contribute to an in-house built SAST solution ruleset, resulting in proactive prevention of several vulnerability classes such as potential RCEs, data exfiltration, and more",
     				"Revamped rule creation documentation for efficient workflow and onboarding",
     				"Performed Threat Modeling and Design Review consultations for teams creating / releasing services",
     				"Researched and implemented code abstractions to rule creation, resulting in approximately 70% reduction in time spent on rule writing"
