@@ -1748,7 +1748,7 @@ var app = (function () {
     			dates: "April 2022 - Present",
     			descriptions: [
     				"Created and released rules to contribute to an in-house built SAST solution ruleset, resulting in proactive prevention of several zero-day vulnerabilities such as potential RCEs, data exfiltration, and more",
-    				"Automated mass scale rule testing to ensure high fidelity/precision detections (7% FP Rate for all rules written)",
+    				"Automated mass scale rule testing to ensure high fidelity/precision detections (<7% FP Rate for all rules written)",
     				"Revamped rule creation documentation for efficient workflow and onboarding as well as creating automation scripts for tools' setup",
     				"Performed Threat Modeling and Design Review consultations for dev teams creating / releasing services",
     				"Researched and implemented code abstractions to data flow detections, resulting in approximately 95%+ reduction in time spent on rule writing",
