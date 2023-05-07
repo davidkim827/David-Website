@@ -10,7 +10,28 @@
 
     const workItems = [
         {
-            company: { name: "Northwestern Mutual Insurance", site: "https://www.northwesternmutual.com/" },
+            company: {
+                name: "Amazon",
+                site: "https://www.amazon.com/",
+            },
+            location: "New York, NY",
+            position: "Appsec Automation Engineer",
+            dates: "April 2022 - Present",
+            descriptions: [
+                "Created and released rules to contribute to an in-house built SAST solution ruleset, resulting in proactive prevention of several zero-day vulnerabilities such as potential RCEs, data exfiltration, and more",
+                "Automated mass scale rule testing to ensure high fidelity/precision detections (7% FP Rate for all rules written)",
+                "Revamped rule creation documentation for efficient workflow and onboarding as well as creating automation scripts for tools' setup",
+                "Performed Threat Modeling and Design Review consultations for dev teams creating / releasing services",
+                "Researched and implemented code abstractions to data flow detections, resulting in approximately 95%+ reduction in time spent on rule writing",
+                "Trained external teams on tools usage",
+                "Mentored and taught several junior members on team",
+            ],
+        },
+        {
+            company: {
+                name: "Northwestern Mutual Insurance",
+                site: "https://www.northwesternmutual.com/",
+            },
             location: "New York, NY",
             position: "Security Automation Engineer",
             dates: "May 2021 - Present",
@@ -59,12 +80,49 @@
             descriptions: [
                 "Created reports on OSINT regarding security concerns to clients",
                 "Researched business development opportunities in the Middle East",
-                "Created daily briefs for company executives on latest trends and topics in National and Homeland security matters"
+                "Created daily briefs for company executives on latest trends and topics in National and Homeland security matters",
             ],
         },
-    ];    
-
+    ];
 </script>
+
+<!-- <div style="cursor: pointer;" onclick="" /> -->
+
+<div class="work-history">
+    {#each workItems as work}
+        <div class="work">
+            <div class="career" on:click={() => toggleVisible()}>
+                <div class="career-box-1">
+                    <div id="company-link" class="left">
+                        <a
+                            on:click={() => openSite(work.company.site)}
+                            href="javascript:void(0)"
+                        >
+                            {work.company.name}
+                        </a>
+                    </div>
+                    <div class="right">{work.location}</div>
+                </div>
+                <div class="career-box-2">
+                    <div class="left">{work.position}</div>
+                    <div class="right">{work.dates}</div>
+                </div>
+            </div>
+            {#if visible}
+                <div
+                    transition:fade={{ y: 200, duration: 500 }}
+                    class="description-box"
+                >
+                    <ul class="show-data">
+                        {#each work.descriptions as description}
+                            <li class="item">{description}</li>
+                        {/each}
+                    </ul>
+                </div>
+            {/if}
+        </div>
+    {/each}
+</div>
 
 <style>
     .work-history {
@@ -115,43 +173,7 @@
         padding: 10px;
     }
 
-    .item{
+    .item {
         margin: 10px;
     }
 </style>
-
-<!-- <div style="cursor: pointer;" onclick="" /> -->
-
-<div class="work-history">
-    {#each workItems as work}
-        <div class="work">
-            <div class="career" on:click={() => toggleVisible()}>
-                <div class="career-box-1">
-                    <div
-                        id="company-link"
-                        class="left">
-                        <a on:click={() => openSite(work.company.site)} href="javascript:void(0)">
-                            {work.company.name}
-                        </a>
-                    </div>
-                    <div class="right">{work.location}</div>
-                </div>
-                <div class="career-box-2">
-                    <div class="left">{work.position}</div>
-                    <div class="right">{work.dates}</div>
-                </div>
-            </div>
-            {#if visible}
-                <div
-                    transition:fade={{ y: 200, duration: 500 }}
-                    class="description-box">
-                    <ul class="show-data">
-                        {#each work.descriptions as description}
-                            <li class="item">{description}</li>
-                        {/each}
-                    </ul>
-                </div>
-            {/if}
-        </div>
-    {/each}
-</div>
